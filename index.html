@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#edf1ed">
+<title>Catatan Pengairan Jagung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+/* Konsep tata letak: lembar kerja lapangan. Formulir catat menempel di kiri; kartu status tiap varietas, riwayat, dan pengelolaan varietas ada di kanan. */
+:root {
+  color-scheme: light;
+  --font-display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --bg: #edf1ed;
+  --surface: #fbfcfa;
+  --surface-2: #e2eae3;
+  --ink: #14221a;
+  --muted: #566a5e;
+  --line: #cbd6cc;
+  --accent: #0b6e8e;
+  --accent-ink: #ffffff;
+  --accent-soft: #d3eaf2;
+  --good: #2d7a4c;
+  --good-soft: #d9edde;
+  --warn: #8f5500;
+  --warn-soft: #f4e2bd;
+  --danger: #a8392b;
+  --danger-soft: #f5dad5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1813;
+    --surface: #15231b;
+    --surface-2: #1f3126;
+    --ink: #e5efe7;
+    --muted: #94a99b;
+    --line: #2b3e32;
+    --accent: #52b8da;
+    --accent-ink: #06222d;
+    --accent-soft: #12394a;
+    --good: #6ccb8f;
+    --good-soft: #173a27;
+    --warn: #e3b25a;
+    --warn-soft: #43350f;
+    --danger: #f08a7a;
+    --danger-soft: #471f19;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1813;
+  --surface: #15231b;
+  --surface-2: #1f3126;
+  --ink: #e5efe7;
+  --muted: #94a99b;
+  --line: #2b3e32;
+  --accent: #52b8da;
+  --accent-ink: #06222d;
+  --accent-soft: #12394a;
+  --good: #6ccb8f;
+  --good-soft: #173a27;
+  --warn: #e3b25a;
+  --warn-soft: #43350f;
+  --danger: #f08a7a;
+  --danger-soft: #471f19;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 15px/1.5 var(--font-body);
+  padding-block: 22px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1, h2 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-weight: 800; font-size: clamp(1.8rem, 5vw, 2.7rem); line-height: 1.05; letter-spacing: -0.01em; }
+h2 { font-weight: 600; font-size: 1.2rem; line-height: 1.2; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.eyebrow, .k, legend, label, th, .cap {
+  font: 600 0.7rem/1.3 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.eyebrow { margin-bottom: 8px; }
+.sub { color: var(--muted); margin-top: 8px; }
+
+/* Ringkasan */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-block: 22px;
+}
+.stat { padding: 14px 16px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.stat + .stat { border-left: 1px solid var(--line); }
+.stat .n { font: 800 clamp(1.35rem, 4.6vw, 2.1rem)/1.1 var(--font-display); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stat .h { font-size: 0.8rem; color: var(--muted); }
+.stat.alert .n { color: var(--danger); }
+
+.banner {
+  background: var(--warn-soft);
+  color: var(--ink);
+  border: 1px solid var(--warn);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-block: 16px 0;
+}
+
+/* Tata letak */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; }
+.main { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+@media (min-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 370px) minmax(0, 1fr); align-items: start; }
+  .form-panel { position: sticky; top: 16px; }
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+  min-width: 0;
+}
+.sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 10px 16px; margin-bottom: 14px; }
+.sec-head .tools { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 14px; }
+
+/* Formulir */
+form { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+legend { padding: 0; margin-bottom: 8px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.row2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+input, select, textarea {
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 9px 10px;
+  width: 100%;
+  min-height: 42px;
+  min-width: 0;
+}
+textarea { resize: vertical; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+input:disabled, select:disabled, textarea:disabled, button:disabled { opacity: 0.55; cursor: not-allowed; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 500 0.82rem/1.25 var(--font-body);
+  cursor: pointer;
+}
+.chip .c { font: 400 0.68rem/1 var(--font-data); color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.mini { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 8px; font-size: 0.85rem; }
+.btn {
+  font: 600 0.95rem/1 var(--font-body);
+  padding: 12px 16px;
+  min-height: 44px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.sm { min-height: 34px; padding: 7px 11px; font-size: 0.85rem; }
+.btn.danger { color: var(--danger); border-color: var(--danger); }
+.link {
+  font: 500 0.85rem/1.3 var(--font-body);
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.msg { min-height: 1.4em; font-size: 0.9rem; }
+.msg.err { color: var(--danger); }
+.msg.ok { color: var(--good); }
+
+/* Kartu varietas */
+.vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 12px; }
+.vcard { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.vtop { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.code { font: 500 0.75rem/1 var(--font-data); color: var(--muted); }
+.vname { font: 600 1.08rem/1.2 var(--font-display); overflow-wrap: anywhere; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font: 600 0.72rem/1 var(--font-body); padding: 5px 8px; border-radius: 999px; }
+.pill i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pill.ok { background: var(--good-soft); color: var(--good); }
+.pill.dry { background: var(--danger-soft); color: var(--danger); }
+.pill.none { background: var(--surface-2); color: var(--muted); }
+.fase { font-size: 0.85rem; min-height: 1.3em; }
+.hst { position: relative; height: 6px; background: var(--surface-2); border-radius: 3px; margin-block: 3px; }
+.hst .band { position: absolute; top: 0; bottom: 0; left: 51%; width: 15%; background: var(--warn-soft); outline: 1px solid var(--warn); }
+.hst .dot { position: absolute; top: -4px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); }
+.strip { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 2px; height: 16px; }
+.strip .c { background: var(--surface-2); border-radius: 2px; }
+.strip .c.on { background: var(--accent); }
+.strip .c.pg { background: linear-gradient(to bottom, var(--accent) 50%, var(--surface-2) 50%); }
+.strip .c.sr { background: linear-gradient(to bottom, var(--surface-2) 50%, var(--accent) 50%); }
+.strip .c.today { outline: 1px solid var(--muted); outline-offset: 1px; }
+.vstats { display: grid; grid-template-columns: 1fr; gap: 2px; font-size: 0.85rem; }
+.vstats b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.vbtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+.fine { font-size: 0.8rem; color: var(--muted); margin-top: 10px; }
+.thr { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted); }
+.thr input { width: 64px; min-height: 34px; padding: 5px 8px; font-family: var(--font-data); }
+
+/* Riwayat */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 720px; }
+th, td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+tbody tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+td .vn { display: block; font-weight: 500; }
+td .note { color: var(--muted); max-width: 26ch; overflow-wrap: anywhere; }
+.empty { padding: 22px 18px; color: var(--muted); }
+.more { margin-top: 12px; }
+.confirm { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+
+/* Kelola varietas */
+details.manage { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+details.manage > summary { padding: 14px 18px; cursor: pointer; font: 600 1.05rem/1.2 var(--font-display); }
+.manage-body { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 10px; }
+.mrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; align-items: end; padding: 12px 0; border-top: 1px solid var(--line); }
+.mrow .acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; min-height: 42px; }
+.mrow .rm { font-size: 0.85rem; color: var(--muted); }
+.mrow .rm.err { color: var(--danger); }
+.mrow.add { background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 12px; }
+
+@media (max-width: 480px) {
+  .panel { padding: 14px; }
+  .stat { padding: 12px 10px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+.btnrow { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow" id="eyebrow">Jagung</p>
+    <h1>Catatan Pengairan Jagung</h1>
+    <p class="sub" id="today"></p>
+  </header>
+
+  <div id="banner" class="banner" role="status" hidden></div>
+  <section class="stats" id="stats" aria-label="Ringkasan 7 hari terakhir"></section>
+
+  <div class="layout">
+    <section class="panel form-panel" id="form-panel" aria-labelledby="h-form">
+      <h2 id="h-form">Catat pengairan</h2>
+      <form id="form" novalidate>
+        <fieldset>
+          <legend>Varietas yang diairi</legend>
+          <div class="chips" id="chips"></div>
+          <div class="mini">
+            <button type="button" class="link" id="sel-all">Pilih semua</button>
+            <button type="button" class="link" id="sel-none">Kosongkan</button>
+            <span class="muted" id="sel-count"></span>
+          </div>
+        </fieldset>
+        <div class="row2">
+          <div class="field">
+            <label for="f-tgl">Tanggal</label>
+            <input id="f-tgl" type="date" required>
+          </div>
+          <div class="field">
+            <label for="f-waktu">Waktu pengairan</label>
+            <select id="f-waktu"></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-metode">Cara pengairan</label>
+            <select id="f-metode"></select>
+          </div>
+          <div class="field">
+            <label for="f-baris">Jumlah baris</label>
+            <input id="f-baris" type="number" inputmode="numeric" min="1" step="1" placeholder="mis. 12">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-dur">Durasi (menit)</label>
+            <input id="f-dur" type="number" inputmode="numeric" min="0" step="1">
+          </div>
+          <div class="field">
+            <label for="f-tanah">Kondisi tanah</label>
+            <select id="f-tanah"></select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-cat">Catatan</label>
+          <textarea id="f-cat" rows="2" maxlength="300"></textarea>
+        </div>
+        <button class="btn primary" id="f-save" type="submit">Simpan catatan</button>
+        <p class="msg" id="msg" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <div class="main">
+      <section aria-labelledby="h-status">
+        <div class="sec-head">
+          <h2 id="h-status">Status varietas</h2>
+          <div class="tools">
+            <div class="thr">
+              <label for="thr" style="text-transform:none;letter-spacing:0;font-size:0.85rem;font-weight:500">Perlu air setelah</label>
+              <input id="thr" type="number" min="1" max="30" step="1" inputmode="numeric">
+              <span>hari</span>
+            </div>
+            <div class="field" style="width:190px">
+              <label for="sort">Urutkan</label>
+              <select id="sort">
+                <option value="kode">Kode varietas</option>
+                <option value="kering">Paling lama tanpa air</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="vgrid" id="vgrid"></div>
+        <p class="fine">Fase tumbuh memakai perkiraan umum jagung umur sedang dan dihitung dari hari setelah tanam (HST). Varietas genjah atau dalam bisa bergeser. Garis kuning pada penanda HST menandai fase pembungaan, saat tanaman paling peka kekurangan air. Pada strip 14 hari, bagian atas kotak berarti pengairan pagi dan bagian bawah pengairan sore.</p>
+      </section>
+
+      <section aria-labelledby="h-riwayat">
+        <div class="sec-head">
+          <h2 id="h-riwayat">Riwayat pengairan</h2>
+          <div class="tools">
+            <div class="field" style="width:220px">
+              <label for="f-filter">Tampilkan</label>
+              <select id="f-filter"></select>
+            </div>
+            <button type="button" class="btn sm" id="csv" hidden>Unduh CSV</button>
+          </div>
+        </div>
+        <div id="history"></div>
+      </section>
+
+      <section class="panel" id="backup" aria-labelledby="h-backup">
+        <h2 id="h-backup">Cadangan data</h2>
+        <p class="sub">Catatan tersimpan di browser perangkat ini saja. Data tidak ikut pindah ke HP atau komputer lain dan hilang jika data browser dibersihkan. Unduh cadangan secara berkala, lalu pulihkan dari file itu di perangkat baru.</p>
+        <div class="btnrow">
+          <button type="button" class="btn sm" id="bk-save">Unduh cadangan</button>
+          <button type="button" class="btn sm" id="bk-load">Pulihkan dari file</button>
+          <input id="bk-file" type="file" accept=".json,application/json" hidden>
+        </div>
+        <div id="bk-msg" class="msg" role="status" aria-live="polite" style="margin-top:10px"></div>
+      </section>
+
+      <details class="manage" id="manage">
+        <summary>Kelola varietas dan tanggal tanam</summary>
+        <div class="manage-body" id="manage-body"></div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var METODE = [['alur', 'Alur / parit'], ['sprinkler', 'Sprinkler'], ['tetes', 'Tetes'], ['manual', 'Siram manual'], ['pompa', 'Pompa']];
+  var TANAH = [['', 'Tidak dicek'], ['kering', 'Kering'], ['agak-kering', 'Agak kering'], ['lembab', 'Lembab'], ['basah', 'Basah']];
+  var WAKTU = [['pagi', 'Pagi'], ['sore', 'Sore']];
+  var FASE = [
+    { max: 10, nama: 'Perkecambahan' },
+    { max: 35, nama: 'Vegetatif awal' },
+    { max: 50, nama: 'Vegetatif akhir' },
+    { max: 65, nama: 'Pembungaan', kritis: true },
+    { max: 95, nama: 'Pengisian biji' },
+    { max: 99999, nama: 'Pemasakan' }
+  ];
+
+  var S = {
+    db: null, dl: null, canWrite: null,
+    varieties: [], records: [],
+    loaded: { v: false, r: false },
+    selected: new Set(), filterV: '', sort: 'kode', shown: 40, threshold: 5,
+    t: '', derived: new Map(), pendingManage: false, loadError: ''
+  };
+
+  /* ---------- helpers ---------- */
+  function $(id) { return document.getElementById(id); }
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (v === null || v === undefined || v === false) return;
+      if (k === 'class') n.className = v;
+      else if (k.slice(0, 2) === 'on') n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? '' : v);
+    });
+    (kids || []).forEach(function (c) {
+      if (c === null || c === undefined) return;
+      n.appendChild(typeof c === 'object' ? c : document.createTextNode(String(c)));
+    });
+    return n;
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function dstr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function today() { return dstr(new Date()); }
+  function parse(s) { var p = s.split('-'); return Date.UTC(+p[0], +p[1] - 1, +p[2]); }
+  function diff(a, b) { return Math.round((parse(b) - parse(a)) / 86400000); }
+  function addDays(s, n) {
+    var d = new Date(parse(s) + n * 86400000);
+    return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate());
+  }
+  function fmtD(s, o) {
+    o = o || { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
+    o.timeZone = 'UTC';
+    return new Intl.DateTimeFormat('id-ID', o).format(new Date(parse(s)));
+  }
+  var nf = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 });
+  function lab(list, k) { var f = list.filter(function (x) { return x[0] === k; })[0]; return f ? f[1] : '—'; }
+  function agoText(ds) { return ds === 0 ? 'Hari ini' : ds === 1 ? 'Kemarin' : ds + ' hari lalu'; }
+  function vlabel(id) {
+    var v = S.varieties.filter(function (x) { return x.id === id; })[0];
+    return v ? v : null;
+  }
+  function errMsg(e) {
+    var c = e && e.code;
+    if (c === 'quota_exceeded') return 'Penyimpanan penuh. Hapus catatan lama yang tidak dipakai lalu coba lagi.';
+    if (c === 'invalid_argument') return 'Akun ini tidak punya izin mengubah data.';
+    if (c === 'resource_exhausted' || c === 'unavailable') return 'Server sedang sibuk. Tunggu sebentar lalu coba lagi.';
+    return 'Gagal menyimpan. Coba lagi.';
+  }
+  function noteWriteError(e) {
+    if (e && e.code === 'invalid_argument' && S.canWrite === null) { S.canWrite = false; applyWriteState(); renderBanner(); renderManage(); }
+  }
+  function setMsg(text, kind) { var m = $('msg'); m.textContent = text || ''; m.className = 'msg' + (kind ? ' ' + kind : ''); }
+  function confirmDelete(label, onYes) {
+    var box = el('span', { class: 'confirm' });
+    function idle() {
+      box.replaceChildren(el('button', { type: 'button', class: 'btn sm danger', onclick: ask }, [label]));
+    }
+    function ask() {
+      box.replaceChildren(
+        el('button', { type: 'button', class: 'btn sm danger', onclick: onYes }, ['Ya, hapus']),
+        el('button', { type: 'button', class: 'btn sm', onclick: idle }, ['Batal'])
+      );
+    }
+    idle();
+    return box;
+  }
+
+  /* ---------- turunan data ---------- */
+  function derive() {
+    var t = S.t, map = new Map();
+    S.varieties.forEach(function (v) { map.set(v.id, { v: v, n: 0, last: null, lastRec: null, ds: 0, days: new Map() }); });
+    var from7 = addDays(t, -6), n7 = 0, baris7 = 0;
+    S.records.forEach(function (r) {
+      if (r.tanggal >= from7 && r.tanggal <= t) { n7++; baris7 += Number(r.jumlahBaris) || 0; }
+      var b = map.get(r.varietasId);
+      if (!b) return;
+      b.n++;
+      var dd = b.days.get(r.tanggal);
+      if (!dd) { dd = { pagi: false, sore: false }; b.days.set(r.tanggal, dd); }
+      if (r.waktu === 'pagi') dd.pagi = true; else if (r.waktu === 'sore') dd.sore = true;
+      if (!b.lastRec) b.lastRec = r;
+      if (!b.last || r.tanggal > b.last) b.last = r.tanggal;
+    });
+    var dry = 0;
+    map.forEach(function (b) {
+      if (b.last) { b.ds = Math.max(0, diff(b.last, t)); b.status = b.ds > S.threshold ? 'dry' : 'ok'; if (b.status === 'dry') dry++; }
+      else b.status = 'none';
+    });
+    S.stat = { n7: n7, baris7: baris7, dry: dry };
+    return map;
+  }
+
+  /* ---------- render ---------- */
+  function renderHeader() {
+    $('today').textContent = 'Hari ini ' + fmtD(S.t, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    $('eyebrow').textContent = S.loaded.v ? 'Jagung · ' + S.varieties.length + ' varietas' : 'Jagung';
+  }
+  function renderBanner() {
+    var b = $('banner'), text = '';
+    if (!S.db) text = 'Penyimpanan data tidak tersedia di browser ini.';
+    else if (S.loadError) text = S.loadError;
+    else if (S.canWrite === false) text = 'Akun ini hanya bisa melihat catatan. Untuk menambah catatan, minta akses sebagai kontributor.';
+    b.textContent = text;
+    b.hidden = !text;
+  }
+  function renderStats() {
+    var ready = S.loaded.v && S.loaded.r, st = S.stat || { n7: 0, baris7: 0, dry: 0 };
+    function stat(k, n, h, alert) {
+      return el('div', { class: 'stat' + (alert ? ' alert' : '') }, [
+        el('span', { class: 'k' }, [k]), el('span', { class: 'n' }, [n]), el('span', { class: 'h' }, [h])
+      ]);
+    }
+    $('stats').replaceChildren(
+      stat('Catatan', ready ? String(st.n7) : '—', '7 hari terakhir'),
+      stat('Baris diairi', ready ? nf.format(st.baris7) : '—', 'total 7 hari terakhir'),
+      stat('Perlu air', ready ? st.dry + ' / ' + S.varieties.length : '—', 'lewat ' + S.threshold + ' hari', ready && st.dry > 0)
+    );
+  }
+  function renderChips() {
+    var box = $('chips');
+    if (!S.varieties.length) {
+      box.replaceChildren(el('p', { class: 'muted' }, [S.loaded.v ? 'Belum ada varietas. Tambahkan di bagian Kelola varietas.' : 'Memuat varietas…']));
+      syncCount();
+      return;
+    }
+    box.replaceChildren.apply(box, S.varieties.map(function (v) {
+      var b = el('button', { type: 'button', class: 'chip', 'data-id': v.id, 'aria-pressed': S.selected.has(v.id) ? 'true' : 'false' }, [
+        el('span', { class: 'c' }, [v.kode || '']), v.nama
+      ]);
+      b.addEventListener('click', function () {
+        if (S.selected.has(v.id)) S.selected.delete(v.id); else S.selected.add(v.id);
+        syncChips();
+      });
+      return b;
+    }));
+    syncCount();
+  }
+  function syncChips() {
+    var list = $('chips').querySelectorAll('.chip');
+    for (var i = 0; i < list.length; i++) list[i].setAttribute('aria-pressed', S.selected.has(list[i].getAttribute('data-id')) ? 'true' : 'false');
+    syncCount();
+  }
+  function syncCount() {
+    $('sel-count').textContent = S.selected.size ? S.selected.size + ' dipilih' : '';
+  }
+  function renderCards() {
+    var grid = $('vgrid');
+    if (!S.loaded.v) { grid.replaceChildren(el('p', { class: 'muted' }, ['Memuat data…'])); return; }
+    if (!S.varieties.length) {
+      grid.replaceChildren(el('p', { class: 'muted' }, ['Belum ada varietas. Buka Kelola varietas di bawah untuk menambahkan yang pertama.']));
+      return;
+    }
+    var items = S.varieties.map(function (v) { return S.derived.get(v.id); });
+    if (S.sort === 'kering') {
+      items = items.slice().sort(function (a, b) {
+        var ka = a.last ? a.ds : -1, kb = b.last ? b.ds : -1;
+        return kb - ka;
+      });
+    }
+    grid.replaceChildren.apply(grid, items.map(card));
+  }
+  function card(b) {
+    var v = b.v, t = S.t;
+    var hst = v.tanggalTanam ? diff(v.tanggalTanam, t) : null;
+    var faseNode, hstBar = null;
+    if (hst === null) {
+      faseNode = el('button', { type: 'button', class: 'link', onclick: openManage }, ['Atur tanggal tanam']);
+    } else if (hst < 0) {
+      faseNode = el('span', { class: 'muted' }, ['Belum tanam, ' + (-hst) + ' hari lagi']);
+    } else {
+      var f = FASE.filter(function (x) { return hst <= x.max; })[0];
+      faseNode = el('span', {}, ['HST ' + hst + ' · ' + f.nama + (f.kritis ? ' · kritis air' : '')]);
+      var pos = Math.min(100, hst);
+      hstBar = el('div', { class: 'hst', role: 'img', 'aria-label': 'Posisi HST ' + hst + ' dari 100' }, [
+        el('span', { class: 'band' }), el('span', { class: 'dot', style: 'left:calc(' + pos + '% - 7px)' })
+      ]);
+    }
+    var strip = el('div', { class: 'strip' });
+    var c14 = 0;
+    for (var i = 13; i >= 0; i--) {
+      var d = addDays(t, -i), dd = b.days.get(d), on = !!dd;
+      if (on) c14++;
+      var cls = 'c' + (i === 0 ? ' today' : ''), wt = '';
+      if (on) {
+        if (dd.pagi && dd.sore) { cls += ' on'; wt = ' · pagi dan sore'; }
+        else if (dd.pagi) { cls += ' pg'; wt = ' · pagi'; }
+        else if (dd.sore) { cls += ' sr'; wt = ' · sore'; }
+        else { cls += ' on'; wt = ' · diairi'; }
+      }
+      strip.appendChild(el('span', {
+        class: cls,
+        title: fmtD(d, { day: 'numeric', month: 'short' }) + (on ? wt : ' · tidak diairi')
+      }));
+    }
+    strip.setAttribute('role', 'img');
+    strip.setAttribute('aria-label', 'Diairi pada ' + c14 + ' dari 14 hari terakhir');
+    var td = b.days.get(t), lr = b.lastRec;
+    var hariIni = 'Pagi ' + (td && td.pagi ? 'sudah' : 'belum') + ' · Sore ' + (td && td.sore ? 'sudah' : 'belum');
+    var lastText = b.last ? agoText(b.ds) + (lr && lr.waktu ? ' · ' + lab(WAKTU, lr.waktu) : '') : '—';
+    var barisText = lr && typeof lr.jumlahBaris === 'number' ? nf.format(lr.jumlahBaris) + (Number(v.totalBaris) > 0 ? ' dari ' + nf.format(Number(v.totalBaris)) : '') : '—';
+    var pillText = b.status === 'dry' ? 'Perlu air' : b.status === 'ok' ? 'Aman' : 'Belum dicatat';
+    var kids = [
+      el('div', { class: 'vtop' }, [
+        el('span', { class: 'code' }, [v.kode || '']),
+        el('span', { class: 'pill ' + b.status }, [el('i', { 'aria-hidden': 'true' }), pillText])
+      ]),
+      el('div', { class: 'vname' }, [v.nama]),
+      el('div', { class: 'fase' }, [faseNode])
+    ];
+    if (hstBar) kids.push(hstBar);
+    kids.push(strip);
+    kids.push(el('div', { class: 'vstats' }, [
+      el('span', {}, ['Terakhir diairi: ', el('b', {}, [lastText])]),
+      el('span', {}, ['Hari ini: ', el('b', {}, [hariIni])]),
+      el('span', {}, ['Baris terakhir diairi: ', el('b', {}, [barisText])]),
+      el('span', {}, ['Jumlah pengairan: ', el('b', {}, [String(b.n)])])
+    ]));
+    kids.push(el('div', { class: 'vbtns' }, [
+      el('button', { type: 'button', class: 'btn sm primary', onclick: function () { catatUntuk(v.id); } }, ['Catat air']),
+      el('button', { type: 'button', class: 'btn sm', onclick: function () { lihatRiwayat(v.id); } }, ['Riwayat'])
+    ]));
+    return el('article', { class: 'vcard' }, kids);
+  }
+  function renderFilter() {
+    var sel = $('f-filter');
+    var opts = [el('option', { value: '' }, ['Semua varietas'])];
+    S.varieties.forEach(function (v) { opts.push(el('option', { value: v.id }, [(v.kode ? v.kode + ' ' : '') + v.nama])); });
+    sel.replaceChildren.apply(sel, opts);
+    if (S.filterV && !vlabel(S.filterV)) S.filterV = '';
+    sel.value = S.filterV;
+  }
+  function renderHistory() {
+    var box = $('history');
+    $('csv').hidden = !(S.dl && S.records.length);
+    if (!S.loaded.r) { box.replaceChildren(el('p', { class: 'empty' }, ['Memuat riwayat…'])); return; }
+    var rows = S.records.filter(function (r) { return !S.filterV || r.varietasId === S.filterV; });
+    if (!rows.length) {
+      box.replaceChildren(el('p', { class: 'empty panel' }, [
+        S.records.length ? 'Belum ada catatan untuk varietas ini.' : 'Belum ada catatan pengairan. Pilih varietas di formulir, lalu simpan catatan pertama.'
+      ]));
+      return;
+    }
+    var shown = rows.slice(0, S.shown);
+    var head = el('tr', {}, [
+      el('th', {}, ['Tanggal']), el('th', {}, ['Waktu']), el('th', {}, ['Varietas']), el('th', {}, ['Cara']),
+      el('th', { class: 'num' }, ['Baris']), el('th', { class: 'num' }, ['Menit']),
+      el('th', {}, ['Tanah']), el('th', {}, ['Catatan']), el('th', {}, [el('span', { style: 'position:absolute;left:-9999px' }, ['Aksi'])])
+    ]);
+    var body = shown.map(function (r) {
+      var v = vlabel(r.varietasId);
+      var del = S.canWrite === false ? null : confirmDelete('Hapus', function () { hapusCatatan(r.id); });
+      return el('tr', {}, [
+        el('td', {}, [fmtD(r.tanggal)]),
+        el('td', {}, [r.waktu ? lab(WAKTU, r.waktu) : '—']),
+        el('td', {}, [v ? el('span', { class: 'vn' }, [v.nama]) : el('span', { class: 'vn muted' }, ['Varietas dihapus']), v ? el('span', { class: 'code' }, [v.kode || '']) : null]),
+        el('td', {}, [lab(METODE, r.metode)]),
+        el('td', { class: 'num' }, [typeof r.jumlahBaris === 'number' ? nf.format(r.jumlahBaris) : '—']),
+        el('td', { class: 'num' }, [typeof r.durasiMenit === 'number' ? nf.format(r.durasiMenit) : '—']),
+        el('td', {}, [r.kondisi ? lab(TANAH, r.kondisi) : '—']),
+        el('td', {}, [el('div', { class: 'note' }, [r.catatan || ''])]),
+        el('td', {}, [del])
+      ]);
+    });
+    var table = el('table', {}, [el('thead', {}, [head]), el('tbody', {}, body)]);
+    var kids = [el('div', { class: 'table-wrap' }, [table]),
+      el('p', { class: 'fine' }, ['Menampilkan ' + shown.length + ' dari ' + rows.length + ' catatan.'])];
+    if (rows.length > shown.length) {
+      kids.push(el('button', { type: 'button', class: 'btn sm more', onclick: function () { S.shown += 40; renderHistory(); } }, ['Tampilkan 40 lagi']));
+    }
+    box.replaceChildren.apply(box, kids);
+  }
+
+  /* ---------- kelola varietas ---------- */
+  function openManage() {
+    var m = $('manage'); m.open = true;
+    m.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function field(label, input) {
+    return el('div', { class: 'field' }, [el('label', {}, [label]), input]);
+  }
+  function renderManage() {
+    var box = $('manage-body');
+    var act = document.activeElement;
+    if (act && act !== document.body && box.contains(act)) { S.pendingManage = true; return; }
+    S.pendingManage = false;
+    var readOnly = S.canWrite === false;
+    var kids = [];
+    if (!S.loaded.v) kids.push(el('p', { class: 'muted' }, ['Memuat varietas…']));
+    S.varieties.forEach(function (v) {
+      var b = S.derived.get(v.id);
+      var inK = el('input', { class: 'i-kode', value: v.kode || '', maxlength: '12', disabled: readOnly });
+      var inN = el('input', { class: 'i-nama', value: v.nama || '', maxlength: '60', disabled: readOnly });
+      var inT = el('input', { class: 'i-tt', type: 'date', value: v.tanggalTanam || '', disabled: readOnly });
+      var inL = el('input', { class: 'i-baris', type: 'number', min: '0', step: '1', inputmode: 'numeric', value: Number(v.totalBaris) > 0 ? String(v.totalBaris) : '', disabled: readOnly });
+      var rm = el('span', { class: 'rm' });
+      var row = el('div', { class: 'mrow' });
+      var acts = el('div', { class: 'acts' });
+      if (!readOnly) {
+        acts.appendChild(el('button', { type: 'button', class: 'btn sm primary', onclick: function () { simpanVarietas(v, row, rm); } }, ['Simpan']));
+        if (b && b.n === 0) acts.appendChild(confirmDelete('Hapus', function () { hapusVarietas(v, rm); }));
+      }
+      acts.appendChild(rm);
+      [field('Kode', inK), field('Nama varietas', inN), field('Tanggal tanam', inT), field('Total baris di petak', inL), acts].forEach(function (n) { row.appendChild(n); });
+      kids.push(row);
+    });
+    if (!readOnly) {
+      var aK = el('input', { id: 'add-kode', maxlength: '12', value: 'V' + pad(S.varieties.length + 1) });
+      var aN = el('input', { id: 'add-nama', maxlength: '60' });
+      var aMsg = el('span', { class: 'rm' });
+      var addRow = el('div', { class: 'mrow add' }, [
+        field('Kode', aK), field('Varietas baru', aN),
+        el('div', { class: 'acts' }, [el('button', { type: 'button', class: 'btn sm', onclick: function () { tambahVarietas(aK, aN, aMsg); } }, ['Tambah varietas']), aMsg])
+      ]);
+      kids.push(addRow);
+    }
+    box.replaceChildren.apply(box, kids);
+  }
+  async function simpanVarietas(v, row, rm) {
+    var nama = row.querySelector('.i-nama').value.trim();
+    var tb = parseInt(row.querySelector('.i-baris').value, 10);
+    if (!nama) { rm.className = 'rm err'; rm.textContent = 'Nama tidak boleh kosong.'; return; }
+    rm.className = 'rm'; rm.textContent = 'Menyimpan…';
+    try {
+      await S.db.doc('varietas/' + v.id).update({
+        kode: row.querySelector('.i-kode').value.trim(),
+        nama: nama,
+        tanggalTanam: row.querySelector('.i-tt').value || '',
+        totalBaris: isFinite(tb) && tb > 0 ? tb : null
+      });
+      rm.textContent = 'Tersimpan.';
+    } catch (e) { rm.className = 'rm err'; rm.textContent = errMsg(e); noteWriteError(e); }
+  }
+  async function tambahVarietas(aK, aN, aMsg) {
+    var nama = aN.value.trim();
+    if (!nama) { aMsg.className = 'rm err'; aMsg.textContent = 'Isi nama varietas.'; return; }
+    var urut = S.varieties.reduce(function (m, v) { return Math.max(m, Number(v.urut) || 0); }, 0) + 1;
+    aMsg.className = 'rm'; aMsg.textContent = 'Menyimpan…';
+    try {
+      await S.db.collection('varietas').add({ kode: aK.value.trim(), nama: nama, tanggalTanam: '', totalBaris: null, urut: urut });
+      aN.value = ''; aK.value = 'V' + pad(urut + 1);
+      aMsg.textContent = 'Ditambahkan.';
+    } catch (e) { aMsg.className = 'rm err'; aMsg.textContent = errMsg(e); noteWriteError(e); }
+  }
+  async function hapusVarietas(v, rm) {
+    try { await S.db.doc('varietas/' + v.id).delete(); S.selected.delete(v.id); }
+    catch (e) { rm.className = 'rm err'; rm.textContent = errMsg(e); noteWriteError(e); }
+  }
+
+  /* ---------- aksi catatan ---------- */
+  function catatUntuk(id) {
+    S.selected = new Set([id]);
+    syncChips();
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    $('form-panel').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    $('f-baris').focus({ preventScroll: true });
+  }
+  function lihatRiwayat(id) {
+    S.filterV = id; S.shown = 40;
+    $('f-filter').value = id;
+    renderHistory();
+    $('h-riwayat').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  async function hapusCatatan(id) {
+    try { await S.db.doc('pengairan/' + id).delete(); }
+    catch (e) { setMsg(errMsg(e), 'err'); noteWriteError(e); }
+  }
+  async function simpanCatatan(ev) {
+    ev.preventDefault();
+    if (!S.db) { setMsg('Penyimpanan tidak tersedia di tampilan ini.', 'err'); return; }
+    var ids = S.varieties.filter(function (v) { return S.selected.has(v.id); }).map(function (v) { return v.id; });
+    var tgl = $('f-tgl').value;
+    if (!ids.length) { setMsg('Pilih minimal satu varietas.', 'err'); return; }
+    if (!tgl) { setMsg('Isi tanggal pengairan.', 'err'); return; }
+    if (tgl > today()) { setMsg('Tanggal tidak boleh lewat dari hari ini.', 'err'); return; }
+    var baris = parseInt($('f-baris').value, 10), dur = parseFloat($('f-dur').value), waktu = $('f-waktu').value;
+    if (!(baris >= 1)) { setMsg('Isi jumlah baris yang diairi, minimal 1.', 'err'); return; }
+    if (isFinite(dur) && dur < 0) { setMsg('Durasi tidak boleh negatif.', 'err'); return; }
+    var dobel = S.records.filter(function (r) { return r.tanggal === tgl && r.waktu === waktu && ids.indexOf(r.varietasId) >= 0; })
+      .map(function (r) { var v = vlabel(r.varietasId); return v ? v.nama : ''; }).filter(Boolean);
+    if (dobel.length) { setMsg('Sudah ada catatan ' + lab(WAKTU, waktu).toLowerCase() + ' pada tanggal ini untuk ' + dobel.join(', ') + '. Hapus catatan lama di riwayat jika ingin menggantinya.', 'err'); return; }
+    var btn = $('f-save'); btn.disabled = true; setMsg('Menyimpan…');
+    var done = 0;
+    try {
+      for (var i = 0; i < ids.length; i++) {
+        await S.db.collection('pengairan').add({
+          varietasId: ids[i], tanggal: tgl, waktu: waktu, metode: $('f-metode').value,
+          jumlahBaris: baris, durasiMenit: isFinite(dur) ? dur : null,
+          kondisi: $('f-tanah').value, catatan: $('f-cat').value.trim(), dibuat: Date.now()
+        });
+        done++;
+      }
+      S.selected = new Set(); syncChips();
+      $('f-baris').value = ''; $('f-dur').value = ''; $('f-cat').value = '';
+      setMsg('Tersimpan untuk ' + done + ' varietas.', 'ok');
+    } catch (e) {
+      setMsg((done ? done + ' tersimpan, sisanya gagal. ' : '') + errMsg(e), 'err'); noteWriteError(e);
+    }
+    btn.disabled = S.canWrite === false;
+  }
+
+  /* ---------- CSV ---------- */
+  function cell(s, text) {
+    s = s === null || s === undefined ? '' : String(s);
+    if (text && /^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  async function unduhCsv() {
+    var lines = [['tanggal', 'waktu', 'kode', 'varietas', 'cara', 'jumlah_baris', 'durasi_menit', 'kondisi_tanah', 'catatan'].join(',')];
+    S.records.slice().sort(function (a, b) { return a.tanggal < b.tanggal ? -1 : a.tanggal > b.tanggal ? 1 : 0; }).forEach(function (r) {
+      var v = vlabel(r.varietasId);
+      lines.push([
+        cell(r.tanggal), cell(r.waktu ? lab(WAKTU, r.waktu) : ''), cell(v ? v.kode : '', true), cell(v ? v.nama : 'Varietas dihapus', true), cell(lab(METODE, r.metode)),
+        cell(typeof r.jumlahBaris === 'number' ? r.jumlahBaris : ''), cell(typeof r.durasiMenit === 'number' ? r.durasiMenit : ''),
+        cell(r.kondisi ? lab(TANAH, r.kondisi) : ''), cell(r.catatan, true)
+      ].join(','));
+    });
+    try {
+      await S.dl.save({ filename: 'pengairan-jagung-' + S.t + '.csv', data: '﻿' + lines.join('\r\n') });
+    } catch (e) {
+      if (e && e.code !== 'declined') setMsg('File belum bisa diunduh di tampilan ini.', 'err');
+    }
+  }
+
+  /* ---------- siklus ---------- */
+  function applyWriteState() {
+    var off = S.canWrite === false || !S.db;
+    var els = $('form').elements;
+    for (var i = 0; i < els.length; i++) els[i].disabled = off;
+    var chips = $('chips').querySelectorAll('.chip');
+    for (var j = 0; j < chips.length; j++) chips[j].disabled = off;
+  }
+  function renderAll() {
+    S.t = today();
+    S.derived = derive();
+    renderHeader(); renderBanner(); renderStats(); renderChips(); renderCards(); renderFilter(); renderHistory(); renderManage();
+    applyWriteState();
+  }
+
+  function init() {
+    $('f-metode').replaceChildren.apply($('f-metode'), METODE.map(function (m) { return el('option', { value: m[0] }, [m[1]]); }));
+    $('f-tanah').replaceChildren.apply($('f-tanah'), TANAH.map(function (m) { return el('option', { value: m[0] }, [m[1]]); }));
+    $('f-waktu').replaceChildren.apply($('f-waktu'), WAKTU.map(function (m) { return el('option', { value: m[0] }, [m[1]]); }));
+    $('f-waktu').value = new Date().getHours() < 12 ? 'pagi' : 'sore';
+    $('f-tgl').value = today(); $('f-tgl').max = today();
+    try { var th = parseInt(localStorage.getItem('ambang-hari'), 10); if (th >= 1 && th <= 30) S.threshold = th; } catch (e) {}
+    $('thr').value = S.threshold;
+    $('thr').addEventListener('change', function () {
+      var n = parseInt(this.value, 10);
+      if (!(n >= 1)) n = 5;
+      n = Math.min(30, n); this.value = n; S.threshold = n;
+      try { localStorage.setItem('ambang-hari', String(n)); } catch (e) {}
+      renderAll();
+    });
+    $('sort').addEventListener('change', function () { S.sort = this.value; renderCards(); });
+    $('f-filter').addEventListener('change', function () { S.filterV = this.value; S.shown = 40; renderHistory(); });
+    $('sel-all').addEventListener('click', function () { S.varieties.forEach(function (v) { S.selected.add(v.id); }); syncChips(); });
+    $('sel-none').addEventListener('click', function () { S.selected = new Set(); syncChips(); });
+    $('form').addEventListener('submit', simpanCatatan);
+    $('csv').addEventListener('click', unduhCsv);
+    $('manage-body').addEventListener('focusout', function () {
+      setTimeout(function () { if (S.pendingManage) renderManage(); }, 120);
+    });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) renderAll(); });
+    renderAll();
+    connect();
+  }
+
+  /* ---------- penyimpanan di browser ---------- */
+  var KEY = 'pengairan-jagung:v1';
+  var DEFAULT_NAMES = ['Bisi-2', 'Bisi-18', 'Bisi-321', 'P27', 'P32', 'Bima-1', 'Bima-3', 'Bima-19 URI', 'Bima-20 URI', 'Lamuru', 'Sukmaraga', 'Srikandi Kuning-1', 'Gumarang', 'Arjuna', 'Jagung Pulut Lokal'];
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function validStore(o) {
+    return o && typeof o === 'object' && o.varietas && typeof o.varietas === 'object' && !Array.isArray(o.varietas) &&
+      o.pengairan && typeof o.pengairan === 'object' && !Array.isArray(o.pengairan);
+  }
+  function makeLocalDb() {
+    var persist = true, mem = null;
+    function readStore() {
+      try { var raw = localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw); if (validStore(o)) return o; } }
+      catch (e) { persist = false; }
+      return null;
+    }
+    function save() {
+      if (!persist) return;
+      try { localStorage.setItem(KEY, JSON.stringify(mem)); }
+      catch (e) { persist = false; S.loadError = 'Penyimpanan browser penuh atau diblokir. Catatan baru hanya bertahan sampai halaman ditutup. Unduh cadangan sekarang.'; }
+    }
+    try { localStorage.setItem('__uji', '1'); localStorage.removeItem('__uji'); } catch (e) { persist = false; }
+    if (!persist) S.loadError = 'Penyimpanan browser tidak tersedia (mungkin mode privat). Catatan hanya bertahan sampai halaman ditutup.';
+    mem = readStore();
+    if (!mem) {
+      mem = { varietas: {}, pengairan: {} };
+      DEFAULT_NAMES.forEach(function (n, i) {
+        mem.varietas['v' + pad(i + 1)] = { kode: 'V' + pad(i + 1), nama: n, tanggalTanam: '', totalBaris: null, urut: i + 1 };
+      });
+      save();
+    }
+    var subs = { varietas: [], pengairan: [] };
+    function snapshot(c) {
+      return { docs: Object.keys(mem[c]).map(function (id) {
+        var d = mem[c][id];
+        return { id: id, data: function () { return clone(d); } };
+      }) };
+    }
+    function notify(c) { subs[c].forEach(function (cb) { cb(snapshot(c)); }); }
+    window.addEventListener('storage', function (e) {
+      if (e.key !== KEY) return;
+      var o = readStore();
+      if (o) { mem = o; notify('varietas'); notify('pengairan'); }
+    });
+    return {
+      collection: function (c) {
+        return {
+          onSnapshot: function (cb) {
+            subs[c].push(cb);
+            setTimeout(function () { cb(snapshot(c)); }, 0);
+            return function () { subs[c] = subs[c].filter(function (x) { return x !== cb; }); };
+          },
+          add: async function (data) { var id = newId(); mem[c][id] = clone(data); save(); notify(c); return { id: id }; }
+        };
+      },
+      doc: function (path) {
+        var p = path.split('/'), c = p[0], id = p[1];
+        return {
+          update: async function (data) {
+            if (!mem[c][id]) throw { code: 'invalid_argument' };
+            Object.assign(mem[c][id], clone(data)); save(); notify(c);
+          },
+          delete: async function () { delete mem[c][id]; save(); notify(c); }
+        };
+      },
+      exportAll: function () { return clone(mem); },
+      replaceAll: function (o) { mem = { varietas: clone(o.varietas), pengairan: clone(o.pengairan) }; save(); notify('varietas'); notify('pengairan'); }
+    };
+  }
+  function makeDownloader() {
+    return {
+      save: async function (o) {
+        var type = /\.json$/.test(o.filename) ? 'application/json' : 'text/csv;charset=utf-8';
+        var url = URL.createObjectURL(new Blob([o.data], { type: type }));
+        var a = document.createElement('a');
+        a.href = url; a.download = o.filename; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+        return { status: 'saved' };
+      }
+    };
+  }
+
+  /* ---------- cadangan ---------- */
+  function bkMsg(text, kind) { var m = $('bk-msg'); m.className = 'msg' + (kind ? ' ' + kind : ''); m.replaceChildren(text); return m; }
+  async function unduhCadangan() {
+    var body = JSON.stringify({ aplikasi: 'pengairan-jagung', versi: 1, diunduh: new Date().toISOString(), data: S.db.exportAll() }, null, 1);
+    await S.dl.save({ filename: 'cadangan-pengairan-jagung-' + today() + '.json', data: body });
+    bkMsg('Cadangan diunduh. Simpan file ini di tempat aman.', 'ok');
+  }
+  function pilihCadangan(file) {
+    var fr = new FileReader();
+    fr.onerror = function () { bkMsg('File tidak bisa dibaca.', 'err'); };
+    fr.onload = function () {
+      var o;
+      try { o = JSON.parse(String(fr.result)); } catch (e) { bkMsg('File bukan cadangan yang valid.', 'err'); return; }
+      var d = o && o.aplikasi === 'pengairan-jagung' ? o.data : null;
+      if (!validStore(d)) { bkMsg('File bukan cadangan Catatan Pengairan Jagung.', 'err'); return; }
+      var nv = Object.keys(d.varietas).length, nr = Object.keys(d.pengairan).length;
+      var m = bkMsg('Ganti semua data di perangkat ini dengan isi file? File berisi ' + nv + ' varietas dan ' + nr + ' catatan. ');
+      var ya = el('button', { type: 'button', class: 'btn sm danger' }, ['Ya, ganti']);
+      var tidak = el('button', { type: 'button', class: 'btn sm' }, ['Batal']);
+      ya.addEventListener('click', function () { S.db.replaceAll(d); S.selected = new Set(); bkMsg('Data dipulihkan dari file.', 'ok'); });
+      tidak.addEventListener('click', function () { bkMsg(''); });
+      m.appendChild(el('span', { class: 'confirm' }, [ya, tidak]));
+    };
+    fr.readAsText(file);
+  }
+
+  function connect() {
+    S.db = makeLocalDb();
+    S.dl = makeDownloader();
+    S.canWrite = true;
+    $('bk-save').addEventListener('click', function () { unduhCadangan().catch(function () { bkMsg('Cadangan belum bisa diunduh di browser ini.', 'err'); }); });
+    $('bk-load').addEventListener('click', function () { $('bk-file').click(); });
+    $('bk-file').addEventListener('change', function () { var f = this.files && this.files[0]; this.value = ''; if (f) pilihCadangan(f); });
+    S.db.collection('varietas').onSnapshot(function (snap) {
+      S.varieties = snap.docs.map(function (d) { var x = d.data(); x.id = d.id; return x; }).sort(function (a, b) {
+        return (Number(a.urut) || 0) - (Number(b.urut) || 0) || String(a.kode).localeCompare(String(b.kode));
+      });
+      S.selected.forEach(function (id) { if (!vlabel(id)) S.selected.delete(id); });
+      S.loaded.v = true; renderAll();
+    });
+    S.db.collection('pengairan').onSnapshot(function (snap) {
+      S.records = snap.docs.map(function (d) { var x = d.data(); x.id = d.id; return x; }).sort(function (a, b) {
+        if (a.tanggal !== b.tanggal) return a.tanggal < b.tanggal ? 1 : -1;
+        return (b.dibuat || 0) - (a.dibuat || 0);
+      });
+      S.loaded.r = true; renderAll();
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
